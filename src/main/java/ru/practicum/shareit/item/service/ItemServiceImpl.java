@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.service;
 
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ForbiddenException;
@@ -20,21 +19,18 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final ItemMapper itemMapper;
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        validateUserExists(userId);
-        validateItemFields(itemDto);
-
-        Item item = itemMapper.toEntity(itemDto, userId);
+        checkUserExists(userId);
+        Item item = ItemMapper.toEntity(itemDto, userId);
         Item savedItem = itemRepository.save(item);
-        return itemMapper.toDto(savedItem);
+        return ItemMapper.toDto(savedItem);
     }
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        validateUserExists(userId);
+        checkUserExists(userId);
 
         Item existingItem = itemRepository.findById(itemId);
         if (existingItem == null) {
@@ -45,9 +41,9 @@ public class ItemServiceImpl implements ItemService {
             throw new ForbiddenException("User is not the owner of this item");
         }
 
-        Item updatedItem = itemMapper.updateEntity(existingItem, itemDto);
+        Item updatedItem = ItemMapper.updateEntity(existingItem, itemDto);
         itemRepository.update(updatedItem);
-        return itemMapper.toDto(updatedItem);
+        return ItemMapper.toDto(updatedItem);
     }
 
     @Override
@@ -56,39 +52,27 @@ public class ItemServiceImpl implements ItemService {
         if (item == null) {
             throw new NotFoundException("Item with id " + itemId + " not found");
         }
-        return itemMapper.toDto(item);
+        return ItemMapper.toDto(item);
     }
 
     @Override
     public List<ItemDto> getItemsByOwner(Long userId) {
-        validateUserExists(userId);
+        checkUserExists(userId);
         return itemRepository.findByOwnerId(userId).stream()
-                .map(itemMapper::toDto)
+                .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> searchItems(String text) {
         return itemRepository.search(text).stream()
-                .map(itemMapper::toDto)
+                .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    private void validateUserExists(Long userId) {
+    private void checkUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User with id " + userId + " not found");
-        }
-    }
-
-    private void validateItemFields(ItemDto itemDto) {
-        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new ValidationException("Item name cannot be empty");
-        }
-        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new ValidationException("Item description cannot be empty");
-        }
-        if (itemDto.getAvailable() == null) {
-            throw new ValidationException("Item availability must be specified");
         }
     }
 }

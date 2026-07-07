@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        validateEmail(userDto.getEmail(), null);
+        checkEmailDuplicate(userDto.getEmail(), null);
         User user = userMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (userDto.getEmail() != null) {
-            validateEmail(userDto.getEmail(), userId);
+            checkEmailDuplicate(userDto.getEmail(), userId);
         }
 
         User updatedUser = userMapper.updateEntity(existingUser, userDto);
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(userMapper::toDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -66,13 +66,7 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
-    private void validateEmail(String email, Long userId) {
-        if (email == null || email.isBlank()) {
-            throw new ValidationException("Email cannot be empty");
-        }
-        if (!isValidEmail(email)) {
-            throw new ValidationException("Invalid email format");
-        }
+    private void checkEmailDuplicate(String email, Long userId) {
         if (userId == null) {
             if (userRepository.existsByEmail(email)) {
                 throw new DuplicateEmailException("User with email " + email + " already exists");
@@ -83,8 +77,5 @@ public class UserServiceImpl implements UserService {
             }
         }
     }
-
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-    }
 }
+
