@@ -18,14 +18,13 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     @Override
     public UserDto createUser(UserDto userDto) {
         checkEmailDuplicate(userDto.getEmail(), null);
-        User user = userMapper.toEntity(userDto);
+        User user = UserMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
-        return userMapper.toDto(savedUser);
+        return UserMapper.toDto(savedUser);
     }
 
     @Override
@@ -39,9 +38,9 @@ public class UserServiceImpl implements UserService {
             checkEmailDuplicate(userDto.getEmail(), userId);
         }
 
-        User updatedUser = userMapper.updateEntity(existingUser, userDto);
+        User updatedUser = UserMapper.updateEntity(existingUser, userDto);
         userRepository.update(updatedUser);
-        return userMapper.toDto(updatedUser);
+        return UserMapper.toDto(updatedUser);
     }
 
     @Override
@@ -50,7 +49,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new NotFoundException("User with id " + userId + " not found");
         }
-        return userMapper.toDto(user);
+        return UserMapper.toDto(user);
     }
 
     @Override
