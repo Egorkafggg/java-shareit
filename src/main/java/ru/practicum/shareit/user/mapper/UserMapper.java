@@ -1,11 +1,13 @@
 package ru.practicum.shareit.user.mapper;
 
-
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 
 public class UserMapper {
-    private UserMapper(){}
+
+    private UserMapper() {
+        // private constructor to prevent instantiation
+    }
 
     public static UserDto toDto(User user) {
         if (user == null) {

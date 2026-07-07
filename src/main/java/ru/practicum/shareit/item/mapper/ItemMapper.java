@@ -1,12 +1,13 @@
 package ru.practicum.shareit.item.mapper;
 
-
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
 public class ItemMapper {
 
-    private ItemMapper(){}
+    private ItemMapper() {
+        // private constructor to prevent instantiation
+    }
 
     public static ItemDto toDto(Item item) {
         if (item == null) {
