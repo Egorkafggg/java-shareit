@@ -77,25 +77,19 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
+        // Проверяем, что пользователь существует
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
-        if (bookingOpt.isEmpty()) {
-            throw new NotFoundException("Booking not found");
-        }
-        Booking booking = bookingOpt.get();
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Booking not found"));
 
-        Optional<Item> itemOpt = itemRepository.findById(booking.getItemId());
-        if (itemOpt.isEmpty()) {
-            throw new NotFoundException("Item not found");
-        }
-        Item item = itemOpt.get();
+        Item item = itemRepository.findById(booking.getItemId())
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
+        // Проверяем, что пользователь - владелец вещи
         if (!item.getOwnerId().equals(userId)) {
-            throw new ForbiddenException("Only owner can approve booking");
+            throw new ForbiddenException("Only owner can approve booking");  // ← 403
         }
 
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -105,15 +99,11 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         booking = bookingRepository.save(booking);
 
-        Optional<User> bookerOpt = userRepository.findById(booking.getBookerId());
-        if (bookerOpt.isEmpty()) {
-            throw new NotFoundException("Booker not found");
-        }
-        User booker = bookerOpt.get();
+        User booker = userRepository.findById(booking.getBookerId())
+                .orElseThrow(() -> new NotFoundException("Booker not found"));
 
         return BookingMapper.toDto(booking, booker, item);
     }
-
     @Override
     public BookingDto getBookingById(Long userId, Long bookingId) {
         Optional<User> userOpt = userRepository.findById(userId);
