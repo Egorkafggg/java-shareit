@@ -78,8 +78,11 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         // Проверяем, что пользователь существует
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new ForbiddenException("User not found or not owner");  // ← 403 вместо 404
+        }
+        User user = userOpt.get();
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found"));
