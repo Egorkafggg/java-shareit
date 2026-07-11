@@ -89,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем, что пользователь - владелец вещи
         if (!item.getOwnerId().equals(userId)) {
-            throw new ForbiddenException("Only owner can approve booking");  // ← 403
+            throw new ForbiddenException("User is not the owner of this item");
         }
 
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -194,13 +194,13 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDto> getBookingsByOwner(Long userId, BookingState state) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
+        // Проверяем, что пользователь существует
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
+        // Проверяем, есть ли у пользователя вещи
         if (itemRepository.findByOwnerIdOrderByIdAsc(userId).isEmpty()) {
-            throw new ValidationException("User has no items");
+            throw new ForbiddenException("User has no items");  // ← 403 Forbidden
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -231,18 +231,10 @@ public class BookingServiceImpl implements BookingService {
 
         return bookings.stream()
                 .map(b -> {
-                    Optional<User> bookerOpt = userRepository.findById(b.getBookerId());
-                    if (bookerOpt.isEmpty()) {
-                        throw new NotFoundException("Booker not found");
-                    }
-                    User booker = bookerOpt.get();
-
-                    Optional<Item> itemOpt = itemRepository.findById(b.getItemId());
-                    if (itemOpt.isEmpty()) {
-                        throw new NotFoundException("Item not found");
-                    }
-                    Item item = itemOpt.get();
-
+                    User booker = userRepository.findById(b.getBookerId())
+                            .orElseThrow(() -> new NotFoundException("Booker not found"));
+                    Item item = itemRepository.findById(b.getItemId())
+                            .orElseThrow(() -> new NotFoundException("Item not found"));
                     return BookingMapper.toDto(b, booker, item);
                 })
                 .collect(Collectors.toList());
