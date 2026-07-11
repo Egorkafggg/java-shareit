@@ -198,7 +198,7 @@ public class BookingServiceImpl implements BookingService {
 
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findByItem_OwnerIdOrderByStartDesc(userId);
                 break;
             case CURRENT:
                 bookings = bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
@@ -219,7 +219,7 @@ public class BookingServiceImpl implements BookingService {
                         userId, BookingStatus.REJECTED);
                 break;
             default:
-                bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findByItem_OwnerIdOrderByStartDesc(userId);
         }
 
         return bookings.stream()
