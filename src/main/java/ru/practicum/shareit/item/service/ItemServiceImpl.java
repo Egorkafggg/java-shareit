@@ -19,13 +19,11 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repo.CommentRepository;
 import ru.practicum.shareit.item.repo.ItemRepository;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.repo.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
