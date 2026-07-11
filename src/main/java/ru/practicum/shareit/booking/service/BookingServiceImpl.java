@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -25,19 +24,25 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-    private final BookingMapper bookingMapper;
+
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                              UserRepository userRepository,
+                              ItemRepository itemRepository) {
+        this.bookingRepository = bookingRepository;
+        this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
+    }
 
     @Override
     @Transactional
     public BookingDto createBooking(Long userId, BookingRequestDto requestDto) {
-        Optional<User> bookerOpt = Optional.ofNullable(userRepository.findById(userId));
+        Optional<User> bookerOpt = userRepository.findById(userId);
         if (bookerOpt.isEmpty()) {
             throw new NotFoundException("User not found");
         }
@@ -62,17 +67,17 @@ public class BookingServiceImpl implements BookingService {
             throw new BadRequestException("End date must be after start date");
         }
 
-        Booking booking = bookingMapper.toEntity(requestDto, userId);
+        Booking booking = BookingMapper.toEntity(requestDto, userId);
         booking.setStatus(BookingStatus.WAITING);
         booking = bookingRepository.save(booking);
 
-        return bookingMapper.toDto(booking, booker, item);
+        return BookingMapper.toDto(booking, booker, item);
     }
 
     @Override
     @Transactional
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
+        Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             throw new NotFoundException("User not found");
         }
@@ -100,15 +105,18 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         booking = bookingRepository.save(booking);
 
-        Optional<User> bookerOpt = Optional.ofNullable(userRepository.findById(booking.getBookerId()));
-        User booker = bookerOpt.orElseThrow(() -> new NotFoundException("Booker not found"));
+        Optional<User> bookerOpt = userRepository.findById(booking.getBookerId());
+        if (bookerOpt.isEmpty()) {
+            throw new NotFoundException("Booker not found");
+        }
+        User booker = bookerOpt.get();
 
-        return bookingMapper.toDto(booking, booker, item);
+        return BookingMapper.toDto(booking, booker, item);
     }
 
     @Override
     public BookingDto getBookingById(Long userId, Long bookingId) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
+        Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             throw new NotFoundException("User not found");
         }
@@ -129,15 +137,18 @@ public class BookingServiceImpl implements BookingService {
             throw new ForbiddenException("User is not booker or owner");
         }
 
-        Optional<User> bookerOpt = Optional.ofNullable(userRepository.findById(booking.getBookerId()));
-        User booker = bookerOpt.orElseThrow(() -> new NotFoundException("Booker not found"));
+        Optional<User> bookerOpt = userRepository.findById(booking.getBookerId());
+        if (bookerOpt.isEmpty()) {
+            throw new NotFoundException("Booker not found");
+        }
+        User booker = bookerOpt.get();
 
-        return bookingMapper.toDto(booking, booker, item);
+        return BookingMapper.toDto(booking, booker, item);
     }
 
     @Override
     public List<BookingDto> getBookingsByUser(Long userId, BookingState state) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
+        Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             throw new NotFoundException("User not found");
         }
@@ -173,18 +184,26 @@ public class BookingServiceImpl implements BookingService {
 
         return bookings.stream()
                 .map(b -> {
-                    Optional<User> bookerOpt = Optional.ofNullable(userRepository.findById(b.getBookerId()));
-                    User booker = bookerOpt.orElseThrow(() -> new NotFoundException("Booker not found"));
+                    Optional<User> bookerOpt = userRepository.findById(b.getBookerId());
+                    if (bookerOpt.isEmpty()) {
+                        throw new NotFoundException("Booker not found");
+                    }
+                    User booker = bookerOpt.get();
+
                     Optional<Item> itemOpt = itemRepository.findById(b.getItemId());
-                    Item item = itemOpt.orElseThrow(() -> new NotFoundException("Item not found"));
-                    return bookingMapper.toDto(b, booker, item);
+                    if (itemOpt.isEmpty()) {
+                        throw new NotFoundException("Item not found");
+                    }
+                    Item item = itemOpt.get();
+
+                    return BookingMapper.toDto(b, booker, item);
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<BookingDto> getBookingsByOwner(Long userId, BookingState state) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
+        Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             throw new NotFoundException("User not found");
         }
@@ -198,37 +217,42 @@ public class BookingServiceImpl implements BookingService {
 
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findByItem_OwnerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findBookingsByOwnerId(userId);
                 break;
             case CURRENT:
-                bookings = bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
-                        userId, now, now);
+                bookings = bookingRepository.findCurrentBookingsByOwnerId(userId, now);
                 break;
             case PAST:
-                bookings = bookingRepository.findByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findPastBookingsByOwnerId(userId, now);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findByItemOwnerIdAndStartAfterOrderByStartDesc(userId, now);
+                bookings = bookingRepository.findFutureBookingsByOwnerId(userId, now);
                 break;
             case WAITING:
-                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
-                        userId, BookingStatus.WAITING);
+                bookings = bookingRepository.findBookingsByOwnerIdAndStatus(userId, BookingStatus.WAITING);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
-                        userId, BookingStatus.REJECTED);
+                bookings = bookingRepository.findBookingsByOwnerIdAndStatus(userId, BookingStatus.REJECTED);
                 break;
             default:
-                bookings = bookingRepository.findByItem_OwnerIdOrderByStartDesc(userId);
+                bookings = bookingRepository.findBookingsByOwnerId(userId);
         }
 
         return bookings.stream()
                 .map(b -> {
-                    Optional<User> bookerOpt = Optional.ofNullable(userRepository.findById(b.getBookerId()));
-                    User booker = bookerOpt.orElseThrow(() -> new NotFoundException("Booker not found"));
+                    Optional<User> bookerOpt = userRepository.findById(b.getBookerId());
+                    if (bookerOpt.isEmpty()) {
+                        throw new NotFoundException("Booker not found");
+                    }
+                    User booker = bookerOpt.get();
+
                     Optional<Item> itemOpt = itemRepository.findById(b.getItemId());
-                    Item item = itemOpt.orElseThrow(() -> new NotFoundException("Item not found"));
-                    return bookingMapper.toDto(b, booker, item);
+                    if (itemOpt.isEmpty()) {
+                        throw new NotFoundException("Item not found");
+                    }
+                    Item item = itemOpt.get();
+
+                    return BookingMapper.toDto(b, booker, item);
                 })
                 .collect(Collectors.toList());
     }
