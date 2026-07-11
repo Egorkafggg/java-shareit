@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 
@@ -33,8 +32,4 @@ public class Booking {
 
     @Column(name = "item_id", nullable = false)
     private Long itemId;
-
-    @ManyToOne
-    @JoinColumn(name = "item_id")
-    private Item item;
 }

@@ -23,9 +23,12 @@ public class Item {
     @Column(name = "description", nullable = false, length = 1000)
     private String description;
 
-    @Column(name = "owner_id", nullable = false)
+    @Column(name = "available", nullable = false)
     private Boolean available;
 
-    @Column(name = "request_id")
+    @Column(name = "owner_id", nullable = false)
     private Long ownerId;
+
+    @Column(name = "request_id")
+    private Long requestId;
 }
