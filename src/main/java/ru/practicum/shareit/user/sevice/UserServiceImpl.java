@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user.sevice;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateEmailException;
@@ -11,6 +10,7 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.repo.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,27 +29,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
-        User existingUser = userRepository.findById(userId);
-        if (existingUser == null) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
             throw new NotFoundException("User with id " + userId + " not found");
         }
+        User existingUser = userOpt.get();
 
         if (userDto.getEmail() != null) {
             checkEmailDuplicate(userDto.getEmail(), userId);
         }
 
         User updatedUser = UserMapper.updateEntity(existingUser, userDto);
-        userRepository.update(updatedUser);
+        userRepository.save(updatedUser);  // ← заменили update на save
         return UserMapper.toDto(updatedUser);
     }
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = userRepository.findById(userId);
-        if (user == null) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
             throw new NotFoundException("User with id " + userId + " not found");
         }
-        return UserMapper.toDto(user);
+        return UserMapper.toDto(userOpt.get());
     }
 
     @Override

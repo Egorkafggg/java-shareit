@@ -39,11 +39,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
-
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Item item = ItemMapper.toEntity(itemDto, userId);
         item = itemRepository.save(item);
         return ItemMapper.toDto(item);
@@ -52,10 +49,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Optional<Item> itemOpt = itemRepository.findById(itemId);
         if (itemOpt.isEmpty()) {
@@ -74,10 +69,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long userId, Long itemId) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Optional<Item> itemOpt = itemRepository.findById(itemId);
         if (itemOpt.isEmpty()) {
@@ -90,10 +83,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsByOwner(Long userId) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         List<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId);
         return items.stream()
@@ -114,11 +105,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CommentRequestDto requestDto) {
-        Optional<User> userOpt = Optional.ofNullable(userRepository.findById(userId));
-        if (userOpt.isEmpty()) {
-            throw new NotFoundException("User not found");
-        }
-        User user = userOpt.get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Optional<Item> itemOpt = itemRepository.findById(itemId);
         if (itemOpt.isEmpty()) {
@@ -165,10 +153,8 @@ public class ItemServiceImpl implements ItemService {
                     dto.setText(c.getText());
                     dto.setCreated(c.getCreated());
 
-                    Optional<User> authorOpt = Optional.ofNullable(userRepository.findById(c.getAuthorId()));
-                    if (authorOpt.isPresent()) {
-                        dto.setAuthorName(authorOpt.get().getName());
-                    }
+                    userRepository.findById(c.getAuthorId())
+                            .ifPresent(author -> dto.setAuthorName(author.getName()));
                     return dto;
                 })
                 .collect(Collectors.toList());
