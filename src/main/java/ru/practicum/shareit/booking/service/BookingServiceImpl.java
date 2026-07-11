@@ -104,6 +104,7 @@ public class BookingServiceImpl implements BookingService {
 
         return BookingMapper.toDto(booking, booker, item);
     }
+
     @Override
     public BookingDto getBookingById(Long userId, Long bookingId) {
         Optional<User> userOpt = userRepository.findById(userId);
