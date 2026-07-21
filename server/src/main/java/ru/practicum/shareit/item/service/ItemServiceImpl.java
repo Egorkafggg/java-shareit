@@ -6,10 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.repo.BookingRepository;
-import ru.practicum.shareit.dto.item.BookingInfoDto;        // ← исправить импорт
-import ru.practicum.shareit.dto.item.CommentDto;           // ← исправить импорт
-import ru.practicum.shareit.dto.item.CommentRequestDto;    // ← исправить импорт
-import ru.practicum.shareit.dto.item.ItemDto;              // ← исправить импорт
+import ru.practicum.shareit.dto.item.BookingInfoDto;
+import ru.practicum.shareit.dto.item.CommentDto;
+import ru.practicum.shareit.dto.item.CommentRequestDto;
+import ru.practicum.shareit.dto.item.ItemDto;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;

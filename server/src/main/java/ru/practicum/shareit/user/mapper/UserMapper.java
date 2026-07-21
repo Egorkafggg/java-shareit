@@ -1,6 +1,6 @@
 package ru.practicum.shareit.user.mapper;
 
-import ru.practicum.shareit.dto.user.UserDto;  // ← исправить импорт
+import ru.practicum.shareit.dto.user.UserDto;
 import ru.practicum.shareit.user.User;
 
 public class UserMapper {

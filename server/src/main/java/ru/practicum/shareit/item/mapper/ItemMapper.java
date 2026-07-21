@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item.mapper;
 
-import ru.practicum.shareit.dto.item.ItemDto;  // ← исправить импорт
+import ru.practicum.shareit.dto.item.ItemDto;
 import ru.practicum.shareit.item.Item;
 
 

@@ -6,7 +6,7 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.mapper.UserMapper;// ← ДОБАВИТЬ ЭТОТ ИМПОРТ
+import ru.practicum.shareit.user.mapper.UserMapper;
 
 public class BookingMapper {
 
